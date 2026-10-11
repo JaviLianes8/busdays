@@ -4,7 +4,13 @@ import busdays
 
 # The public API. Add every exported name here as the library grows; this list is the
 # contract and the test below fails if the module and this list disagree.
-PUBLIC_API: list[str] = []
+PUBLIC_API: list[str] = [
+    "add_business_days",
+    "business_days_between",
+    "is_business_day",
+    "next_business_day",
+    "prev_business_day",
+]
 
 
 def test_all_lists_exactly_the_public_api() -> None:
