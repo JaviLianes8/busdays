@@ -10,3 +10,6 @@ dist/
 .ruff_cache/
 .coverage
 htmlcov/
+# Upstream copies fetched by scripts/fetch_upstream.py; only the manifest is tracked.
+data/upstream/*
+!data/upstream/MANIFEST.json

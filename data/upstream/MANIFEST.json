@@ -1,0 +1,65 @@
+{
+  "numpy-busday_offset.html": {
+    "title": "numpy.busday_offset reference",
+    "url": "https://numpy.org/doc/stable/reference/generated/numpy.busday_offset.html",
+    "revision": "numpy stable docs (2.3)",
+    "licence": "BSD-3-Clause (numpy)",
+    "fetched": "2026-10-14",
+    "size": 38620,
+    "sha256": "bbdf41b15aba85b3dfeff5ec727a3e31dca8d98d08898f8a857c3d198adad361"
+  },
+  "numpy-busday_count.html": {
+    "title": "numpy.busday_count reference",
+    "url": "https://numpy.org/doc/stable/reference/generated/numpy.busday_count.html",
+    "revision": "numpy stable docs (2.3)",
+    "licence": "BSD-3-Clause (numpy)",
+    "fetched": "2026-10-14",
+    "size": 34397,
+    "sha256": "a42cc9aa9594e5d519b683bc273ec573caf8adcc206d2b6c626ab3580da57189"
+  },
+  "numpy-is_busday.html": {
+    "title": "numpy.is_busday reference",
+    "url": "https://numpy.org/doc/stable/reference/generated/numpy.is_busday.html",
+    "revision": "numpy stable docs (2.3)",
+    "licence": "BSD-3-Clause (numpy)",
+    "fetched": "2026-10-14",
+    "size": 33138,
+    "sha256": "0c776ed456b81cae9cb0202668be4a9d2bda44453d8c7fec06ed760084fd162d"
+  },
+  "numpy-busdaycalendar.html": {
+    "title": "numpy.busdaycalendar reference",
+    "url": "https://numpy.org/doc/stable/reference/generated/numpy.busdaycalendar.html",
+    "revision": "numpy stable docs (2.3)",
+    "licence": "BSD-3-Clause (numpy)",
+    "fetched": "2026-10-14",
+    "size": 33977,
+    "sha256": "f301172a033249e4b09b1a4effe08bc16b1e0dc77f03b94d601f335cd43a04d5"
+  },
+  "quantlib-businessdayconvention.hpp": {
+    "title": "QuantLib business day conventions",
+    "url": "https://raw.githubusercontent.com/lballabio/QuantLib/master/ql/time/businessdayconvention.hpp",
+    "revision": "master",
+    "licence": "BSD-3-Clause (QuantLib licence)",
+    "fetched": "2026-10-14",
+    "size": 3509,
+    "sha256": "376bc2e80b2988a78e40556c42d5c46e801e4ac4f07a803e42ca81780a9e2ce0"
+  },
+  "quantlib-calendar.cpp": {
+    "title": "QuantLib Calendar::adjust",
+    "url": "https://raw.githubusercontent.com/lballabio/QuantLib/master/ql/time/calendar.cpp",
+    "revision": "master",
+    "licence": "BSD-3-Clause (QuantLib licence)",
+    "fetched": "2026-10-14",
+    "size": 12544,
+    "sha256": "5027b36b8dd303c7dc060db760d4c618c4818711edcbdcd93eae07cce62cc8f9"
+  },
+  "uk-bank-holidays.json": {
+    "title": "GOV.UK bank holidays, 2019 to 2028",
+    "url": "https://www.gov.uk/bank-holidays.json",
+    "revision": "live dataset",
+    "licence": "Open Government Licence v3.0",
+    "fetched": "2026-10-14",
+    "size": 22207,
+    "sha256": "538b3482c28b85ecd2db606a0d5ae6ad17248900b6498700ce0a48d26a3ecde6"
+  }
+}
