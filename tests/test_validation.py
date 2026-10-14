@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-import numpy as np
 import pytest
 
 from busdays import (
@@ -18,6 +17,16 @@ from busdays import (
 )
 
 MON = date(2026, 1, 5)
+
+
+class Index:
+    """An integer-like value, as numpy integers are, through ``__index__``."""
+
+    def __init__(self, value: int) -> None:
+        self.value = value
+
+    def __index__(self) -> int:
+        return self.value
 
 
 @pytest.mark.parametrize("weekend", [(True,), (5, False), (5.0,), ("5",), (-1,), (7,), "56", b"5"])
@@ -37,8 +46,8 @@ def test_a_weekend_string_points_at_from_weekmask() -> None:
 
 
 def test_integer_like_weekend_days_and_counts_are_accepted() -> None:
-    assert Calendar((np.int64(5), np.int64(6))) == Calendar()
-    assert add_business_days(MON, np.int32(5)) == date(2026, 1, 12)
+    assert Calendar((Index(5), Index(6))) == Calendar()  # type: ignore[arg-type]
+    assert add_business_days(MON, Index(5)) == date(2026, 1, 12)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("n", [1.0, True, "1", None])
