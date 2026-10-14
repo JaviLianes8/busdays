@@ -16,4 +16,11 @@ pip install -r requirements-dev.txt
 - Run `scripts/check.ps1` (format, lint, types, tests) and make sure it passes.
 - One logical change per commit, imperative subject line.
 
+## Upstream sources and the slow tests
+
+`python scripts/fetch_upstream.py` downloads the numpy and QuantLib reference pages and the
+GOV.UK holiday list named in `data/upstream/MANIFEST.json` into that folder; they are not
+committed, and the tests that read them skip until they are fetched. numpy is a test-only
+oracle. `pytest -m e2e` builds the wheel and the sdist and drives the installed script.
+
 Open an issue first if the change is large or shifts the public API.

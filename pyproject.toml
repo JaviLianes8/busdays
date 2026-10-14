@@ -4,24 +4,37 @@ build-backend = "hatchling.build"
 
 [project]
 name = "busdays"
-version = "0.1.0"
+version = "0.2.0"
 description = "Zero-dependency business-day arithmetic with a configurable weekend mask and optional holidays"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Javier Lianes", email = "javier@lianes8studio.com" }]
-keywords = []
+keywords = ["business days", "workdays", "holidays", "calendar", "busday", "modified following", "date arithmetic"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Office/Business :: Scheduling",
+    "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["ruff", "mypy", "pytest", "build", "twine"]
+dev = ["ruff", "mypy", "pytest", "numpy", "build", "twine"]
+
+[project.scripts]
+busdays = "busdays._cli:main"
 
 [project.urls]
 Homepage = "https://lianes8studio.com"
@@ -33,6 +46,19 @@ Funding = "https://buymeacoffee.com/jlianesglrs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/busdays"]
+
+[tool.hatch.build.targets.sdist]
+# Upstream copies are fetched locally and never shipped; only their manifest is.
+include = [
+    "src",
+    "tests",
+    "scripts",
+    "data/upstream/MANIFEST.json",
+    "README.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+]
 
 [tool.ruff]
 line-length = 100
@@ -48,4 +74,7 @@ strict = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-q"
+addopts = "-q -m 'not e2e'"
+markers = [
+    "e2e: builds the wheel and installs it into a fresh venv (needs network); run with -m e2e",
+]
