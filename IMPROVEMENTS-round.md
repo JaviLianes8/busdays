@@ -12,9 +12,9 @@ Progress:
 - [x] Contracts: numpy oracle, QuantLib conventions, GOV.UK bank holidays, README examples
 - [x] Docs and packaging: README, CHANGELOG, metadata, installed-wheel e2e test
 - [x] Gates: ruff format, ruff check, mypy --strict, pytest
-- [ ] Mutation run: removing guarded logic makes the suite fail
+- [x] Mutation run: removing guarded logic makes the suite fail
 - [x] Independent review findings fixed with regression tests
-- [ ] Pull request opened and checked
+- [x] Pull request opened and checked
 
 ## Starting point
 
@@ -98,9 +98,9 @@ days are calendar dates; a caller converts first).
 
 - Gates (ruff format, ruff check, mypy --strict, pytest) and the installed-wheel and
   sdist tests green on a clean clone with the upstream copies fetched.
-- Mutation run: hand-written mutants over every module, `__pycache__` purged before each
+- Mutation run: 59 hand-written mutants over every module, all killed in the final run; `__pycache__` purged before each
   and no bytecode written, the baseline green before and after. The first run left seven
-  survivors; each led to a new test (the day just past either end, nearest next to a
+  survivors out of 53; each led to a new test (the day just past either end, nearest next to a
   missing side, a month of holidays after a working day, the hash covering holidays, the
   message for a string holiday list) or, for one redundant guard, to simpler code.
 - Independent review: no wrong dates or counts. Fixed, each with a test: holiday files
