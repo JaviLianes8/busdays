@@ -11,9 +11,9 @@ Progress:
 - [x] Command line tool
 - [x] Contracts: numpy oracle, QuantLib conventions, GOV.UK bank holidays, README examples
 - [x] Docs and packaging: README, CHANGELOG, metadata, installed-wheel e2e test
-- [ ] Gates: ruff format, ruff check, mypy --strict, pytest
+- [x] Gates: ruff format, ruff check, mypy --strict, pytest
 - [ ] Mutation run: removing guarded logic makes the suite fail
-- [ ] Independent review findings fixed with regression tests
+- [x] Independent review findings fixed with regression tests
 - [ ] Pull request opened and checked
 
 ## Starting point
@@ -93,3 +93,21 @@ dates or plans payroll:
 Rejected for this round: shipping regional holiday rules (the point of the library is that
 the caller brings them), Easter computation, time zones and `datetime` support (business
 days are calendar dates; a caller converts first).
+
+## Outcome
+
+- Gates (ruff format, ruff check, mypy --strict, pytest) and the installed-wheel and
+  sdist tests green on a clean clone with the upstream copies fetched.
+- Mutation run: hand-written mutants over every module, `__pycache__` purged before each
+  and no bytecode written, the baseline green before and after. The first run left seven
+  survivors; each led to a new test (the day just past either end, nearest next to a
+  missing side, a month of holidays after a working day, the hash covering holidays, the
+  message for a string holiday list) or, for one redundant guard, to simpler code.
+- Independent review: no wrong dates or counts. Fixed, each with a test: holiday files
+  with a byte order mark, a repeated `--holidays -`, a reader that closes the pipe early
+  (`| head`), numpy arrays and numpy bools as weekmask flags, a day-by-day reference
+  property test for every convention including both ends of the supported dates, and the
+  rolled-start offset past the last date. Documentation now states that module functions
+  build a calendar per call, that day names are read in any case, that an all-zero mask
+  is allowed and that numpy's `nat` is refused. `requires-python` stays at 3.10, as on
+  `main`.

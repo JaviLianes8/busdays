@@ -1,7 +1,7 @@
 # busdays
 
 Zero-dependency business-day arithmetic with a configurable weekend mask and optional
-holidays: offsets, counts, roll conventions and month helpers, in logarithmic time.
+holidays: offsets, counts, roll conventions and month helpers.
 
 ## Install
 
@@ -45,8 +45,12 @@ add_business_days(date(2026, 1, 1), 1, weekend=(4, 5))  # -> date(2026, 1, 4)
 
 ### A calendar, built once
 
-A `Calendar` checks the weekend and holidays once and answers every question in
-logarithmic time, so a million business days cost the same as one. Holidays on a
+A `Calendar` checks and sorts the weekend and holidays once; after that, counts and
+offsets take logarithmic time, so a million business days cost the same as one. The
+module-level functions build a calendar on every call, which costs O(H log H) for H
+holidays: build a `Calendar` yourself when you ask many questions of the same holidays.
+`business_days()` yields one date at a time, so it costs time in the number of days
+it covers. Holidays on a
 weekend day are dropped and duplicates merged, as `numpy.busdaycalendar` does.
 
 ```python
@@ -60,7 +64,7 @@ days = uk.business_days(date(2026, 12, 24), date(2026, 12, 31))
 [d.day for d in days]  # -> [24, 29, 30]
 Calendar().add_business_days(date(2026, 1, 5), 1_000_000)  # -> date(5859, 1, 31)
 
-# numpy style weekmasks: seven 0/1 characters or day names, Monday first.
+# numpy style weekmasks: seven 0/1 characters, day names (any case) or seven flags.
 gulf = Calendar.from_weekmask("Sun Mon Tue Wed Thu")
 gulf.weekend  # -> (4, 5)
 gulf.weekmask  # -> '1111001'
@@ -72,7 +76,8 @@ gulf.weekmask  # -> '1111001'
 conventions are the ISDA ones (following, modified following, preceding) and the common
 non-ISDA ones (modified preceding, half-month modified following, nearest, unadjusted),
 plus `raise`. Names are forgiving: `"modified_following"`, `"ModifiedFollowing"` and
-numpy's `"forward"` and `"backward"` all work.
+numpy's `"forward"` and `"backward"` all work. numpy's `"nat"` has no `date`
+equivalent and is refused.
 
 ```python
 saturday = date(2026, 1, 31)

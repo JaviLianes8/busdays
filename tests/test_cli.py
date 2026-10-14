@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import errno
 import io
 from pathlib import Path
 
@@ -107,3 +108,44 @@ def test_version(capsys: pytest.CaptureFixture[str]) -> None:
     import busdays
 
     assert _run(capsys, "--version") == (0, f"busdays {busdays.__version__}\n", "")
+
+
+def test_a_byte_order_mark_in_a_holiday_file_is_ignored(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    listing = tmp_path / "holidays.txt"
+    listing.write_bytes(b"\xef\xbb\xbf2026-01-05\n")
+    assert _run(capsys, "add", "2026-01-02", "1", "--holidays", str(listing))[:2] == (
+        0,
+        "2026-01-06\n",
+    )
+
+
+def test_standard_input_can_be_read_only_once(capsys: pytest.CaptureFixture[str]) -> None:
+    code, out, err = _run(capsys, "is", "2026-01-05", "--holidays", "-", "--holidays", "-")
+    assert (code, out) == (2, "")
+    assert "only once" in err
+
+
+class ClosedPipe(io.StringIO):
+    def __init__(self, error: OSError) -> None:
+        super().__init__()
+        self.error = error
+
+    def write(self, text: str) -> int:
+        raise self.error
+
+
+@pytest.mark.parametrize("error", [BrokenPipeError(), OSError(errno.EINVAL, "Invalid argument")])
+def test_a_reader_that_stops_early_ends_the_listing_quietly(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, error: OSError
+) -> None:
+    monkeypatch.setattr("sys.stdout", ClosedPipe(error))
+    assert main(["list", "0001-01-01", "9999-12-31"]) == 1
+    assert capsys.readouterr().err == ""
+
+
+def test_other_output_errors_are_not_swallowed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("sys.stdout", ClosedPipe(OSError(errno.ENOSPC, "No space left")))
+    with pytest.raises(OSError, match="No space left"):
+        main(["count", "2026-01-05", "2026-01-12"])

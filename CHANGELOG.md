@@ -26,7 +26,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
-- Every function now runs in logarithmic time instead of walking day by day.
+- Counts and offsets no longer walk day by day: once a calendar is built they take
+  logarithmic time. Module-level functions build one per call (O(H log H) for H
+  holidays).
 - Stricter input: `bool` and `float` are refused as weekdays and counts, a `datetime` is
   refused where a `date` is meant, holidays must be dates, and a result outside years 1
   to 9999 raises `OverflowError` with a clear message.

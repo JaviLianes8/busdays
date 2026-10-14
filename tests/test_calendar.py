@@ -143,3 +143,15 @@ def test_month_helpers_reject_non_integers() -> None:
         first_business_day(2026, True)
     with pytest.raises(TypeError):
         last_business_day(2026.0, 1)  # type: ignore[arg-type]
+
+
+def test_from_weekmask_takes_numpy_arrays_of_flags() -> None:
+    np = pytest.importorskip("numpy")
+    assert Calendar.from_weekmask(np.array([1, 1, 1, 1, 1, 0, 0])) == Calendar()
+    flags = np.array([True] * 5 + [False] * 2)
+    assert Calendar.from_weekmask(flags) == Calendar()
+    assert Calendar.from_weekmask(list(flags)) == Calendar()
+    with pytest.raises(ValueError):
+        Calendar.from_weekmask(np.array([1, 1, 1, 1, 1, 0, 2]))
+    with pytest.raises(ValueError):
+        Calendar.from_weekmask(list("1111100"))  # type: ignore[arg-type]

@@ -47,10 +47,21 @@ def parse_weekmask(weekmask: str | Sequence[bool | int]) -> tuple[bool, ...]:
         if re.fullmatch(r"[01]{7}", weekmask):
             return tuple(char == "1" for char in weekmask)
         return _parse_day_names(weekmask)
-    flags = list(weekmask)
-    if len(flags) != 7 or any(not isinstance(flag, int) or flag not in (0, 1) for flag in flags):
+    flags = [_flag(flag) for flag in weekmask]
+    if len(flags) != 7 or None in flags:
         raise ValueError("a weekmask sequence must hold seven 0/1 or bool values, Monday first")
     return tuple(bool(flag) for flag in flags)
+
+
+def _flag(value: object) -> int | None:
+    # numpy arrays yield numpy integers (with __index__) or numpy bools (dtype kind "b").
+    if getattr(getattr(value, "dtype", None), "kind", None) == "b":
+        return int(bool(value))
+    try:
+        number = operator.index(value)  # type: ignore[arg-type]
+    except TypeError:
+        return None
+    return number if number in (0, 1) else None
 
 
 def _parse_day_names(text: str) -> tuple[bool, ...]:

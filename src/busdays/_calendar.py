@@ -22,8 +22,9 @@ class Calendar:
     """An immutable business-day calendar: which weekdays are off, and which dates.
 
     Holidays that fall on a weekend day are dropped and duplicates merged, as
-    ``numpy.busdaycalendar`` does. Counts take O(log holidays) time and offsets
-    O(log(holidays) ** 2), however far apart the dates are.
+    ``numpy.busdaycalendar`` does. Building one sorts the holidays once; after that,
+    counts take O(log holidays) time and offsets O(log(holidays) ** 2), however far
+    apart the dates are.
     """
 
     __slots__ = ("_kernel",)
@@ -38,7 +39,11 @@ class Calendar:
     def from_weekmask(
         cls, weekmask: str | Sequence[bool | int], holidays: Iterable[date] | None = None
     ) -> Calendar:
-        """Build from a numpy weekmask: ``"1111100"``, ``"Sun Mon Tue Wed Thu"`` or 7 flags."""
+        """Build from a numpy style weekmask: ``"1111100"``, ``"Sun Mon Tue"`` or 7 flags.
+
+        Day names are read without regard to case, and an all-zero mask is allowed
+        (numpy refuses it); such a calendar has no business day.
+        """
         mask = parse_weekmask(weekmask)
         return cls([day for day in range(7) if not mask[day]], holidays)
 

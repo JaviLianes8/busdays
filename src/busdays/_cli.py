@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
+import errno
+import os
 import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import date
 from pathlib import Path
 
 from busdays import __version__
 from busdays._calendar import Calendar
 from busdays._roll import Roll, parse_roll
+
+BOM = chr(0xFEFF)
 
 
 def _day(text: str) -> date:
@@ -78,10 +83,13 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _read_holidays(paths: Sequence[Path]) -> list[date]:
+    if sum(str(path) == "-" for path in paths) > 1:
+        raise ValueError("standard input can be given as --holidays only once")
     found: list[date] = []
     for path in paths:
-        text = sys.stdin.read() if str(path) == "-" else path.read_text(encoding="utf-8")
-        for number, line in enumerate(text.splitlines(), 1):
+        # utf-8-sig: Windows editors often save a byte order mark at the start.
+        text = sys.stdin.read() if str(path) == "-" else path.read_text(encoding="utf-8-sig")
+        for number, line in enumerate(text.lstrip(BOM).splitlines(), 1):
             entry = line.split("#", 1)[0].strip()
             if entry:
                 try:
@@ -98,22 +106,18 @@ def _calendar(args: argparse.Namespace) -> Calendar:
     return Calendar((5, 6) if args.weekend is None else args.weekend, holidays)
 
 
-def _run(args: argparse.Namespace) -> int:
+def _answer(args: argparse.Namespace) -> tuple[Iterable[object], int]:
     calendar = _calendar(args)
     if args.command == "add":
-        print(calendar.add_business_days(args.date, args.n, roll=args.roll))
-    elif args.command == "count":
-        print(calendar.business_days_between(args.a, args.b))
-    elif args.command == "roll":
-        print(calendar.roll(args.date, args.convention))
-    elif args.command == "is":
+        return [calendar.add_business_days(args.date, args.n, roll=args.roll)], 0
+    if args.command == "count":
+        return [calendar.business_days_between(args.a, args.b)], 0
+    if args.command == "roll":
+        return [calendar.roll(args.date, args.convention)], 0
+    if args.command == "is":
         working = calendar.is_business_day(args.date)
-        print("yes" if working else "no")
-        return 0 if working else 1
-    else:
-        for day in calendar.business_days(args.a, args.b):
-            print(day)
-    return 0
+        return ["yes" if working else "no"], 0 if working else 1
+    return calendar.business_days(args.a, args.b), 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -121,7 +125,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
     try:
-        return _run(args)
+        lines, code = _answer(args)
     except (ValueError, OverflowError, OSError) as error:
         print(f"busdays: error: {error}", file=sys.stderr)
         return 2
+    try:
+        for line in lines:
+            print(line)
+        sys.stdout.flush()
+    except OSError as error:
+        # A reader that stops early (``| head``) closes the pipe: EPIPE, or EINVAL on
+        # Windows. Stop quietly, as the Python signal documentation recommends.
+        if not isinstance(error, BrokenPipeError) and error.errno != errno.EINVAL:
+            raise
+        # When stdout is not a real file (embedded use) there is nothing left to silence.
+        with contextlib.suppress(OSError, ValueError):
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return 1
+    return code
