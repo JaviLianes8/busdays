@@ -87,8 +87,8 @@ def _read_holidays(paths: Sequence[Path]) -> list[date]:
         raise ValueError("standard input can be given as --holidays only once")
     found: list[date] = []
     for path in paths:
-        # utf-8-sig: Windows editors often save a byte order mark at the start.
-        text = sys.stdin.read() if str(path) == "-" else path.read_text(encoding="utf-8-sig")
+        text = sys.stdin.read() if str(path) == "-" else path.read_text(encoding="utf-8")
+        # Windows editors often save a byte order mark at the start of the file.
         for number, line in enumerate(text.lstrip(BOM).splitlines(), 1):
             entry = line.split("#", 1)[0].strip()
             if entry:
