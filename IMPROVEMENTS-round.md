@@ -2,15 +2,15 @@
 
 Progress:
 - [x] Brainstorm ranked improvements (this file)
-- [ ] Pin the ground truth: upstream copies in a local folder with a tracked manifest
-- [ ] `Calendar`: validated weekend and holidays, built once, O(log holidays) arithmetic
-- [ ] Roll conventions: following, preceding, modified, half-month, nearest, unadjusted, raise
-- [ ] Offsets with an explicit roll (numpy reading) next to the current counting reading
-- [ ] Ranges: iterate business days, count, first and last of a month
-- [ ] Strict validation: types, booleans, datetimes, weekmask strings, date range edges
-- [ ] Command line tool
-- [ ] Contracts: numpy oracle, QuantLib conventions, GOV.UK bank holidays, README examples
-- [ ] Docs and packaging: README, CHANGELOG, metadata, installed-wheel e2e test
+- [x] Pin the ground truth: upstream copies in a local folder with a tracked manifest
+- [x] `Calendar`: validated weekend and holidays, built once, O(log holidays) arithmetic
+- [x] Roll conventions: following, preceding, modified, half-month, nearest, unadjusted, raise
+- [x] Offsets with an explicit roll (numpy reading) next to the current counting reading
+- [x] Ranges: iterate business days, count, first and last of a month
+- [x] Strict validation: types, booleans, datetimes, weekmask strings, date range edges
+- [x] Command line tool
+- [x] Contracts: numpy oracle, QuantLib conventions, GOV.UK bank holidays, README examples
+- [x] Docs and packaging: README, CHANGELOG, metadata, installed-wheel e2e test
 - [ ] Gates: ruff format, ruff check, mypy --strict, pytest
 - [ ] Mutation run: removing guarded logic makes the suite fail
 - [ ] Independent review findings fixed with regression tests
@@ -75,8 +75,8 @@ dates or plans payroll:
    `datetime` rejected where a `date` is meant (it silently never equals a holiday), a
    clear `OverflowError` at the ends of the date range, a `ValueError` for a weekend that
    leaves no working day when one is needed.
-6. **Ranges.** `business_days(start, stop)` iterates `[start, stop)` in either
-   direction, plus `first_business_day` and `last_business_day` of a month.
+6. **Ranges.** `business_days(start, stop)` iterates `[start, stop)` in order (empty
+   when `stop <= start`), plus `first_business_day` and `last_business_day` of a month.
 7. **Antisymmetric counts, stated.** `business_days_between(a, b) == -business_days_between(b, a)`
    holds; numpy counts a reversed range as `(end, begin]`, so the two differ when an
    endpoint is not a business day. Pinned by a test and written in the README.

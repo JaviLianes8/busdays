@@ -112,7 +112,7 @@ def test_roll_names_are_forgiving(text: str, member: Roll) -> None:
 
 def test_roll_members_print_as_their_value() -> None:
     assert str(Roll.MODIFIED_FOLLOWING) == "modifiedfollowing"
-    assert Roll.FOLLOWING == "following"
+    assert Roll.FOLLOWING == "following"  # type: ignore[comparison-overlap]
 
 
 @pytest.mark.parametrize("bad", ["nat", "modified", "", "followingx"])

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date, datetime
 
 import pytest
@@ -58,7 +59,7 @@ def test_counts_must_be_integers(n: object) -> None:
 
 @pytest.mark.parametrize("value", [datetime(2026, 1, 5), "2026-01-05", 20260105, None])
 def test_dates_must_be_plain_dates(value: object) -> None:
-    calls = [
+    calls: list[Callable[[], object]] = [
         lambda: is_business_day(value),  # type: ignore[arg-type]
         lambda: add_business_days(value, 1),  # type: ignore[arg-type]
         lambda: add_business_days(value, 0),  # type: ignore[arg-type]
@@ -88,12 +89,13 @@ def test_a_full_weekend_still_answers_questions_that_need_no_business_day() -> N
 
 def test_a_full_weekend_cannot_find_a_business_day() -> None:
     everything = Calendar(range(7))
-    for call in (
+    calls: tuple[Callable[[], object], ...] = (
         lambda: everything.add_business_days(MON, 1),
         lambda: everything.add_business_days(MON, -1),
         lambda: everything.roll(MON),
         lambda: everything.first_business_day(2026, 1),
-    ):
+    )
+    for call in calls:
         with pytest.raises(ValueError, match="no business day exists"):
             call()
 
