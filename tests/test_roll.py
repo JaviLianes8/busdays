@@ -93,6 +93,15 @@ def test_conventions_at_the_ends_of_the_supported_dates() -> None:
         monday_off.roll(first, Roll.PRECEDING)
 
 
+def test_nearest_never_picks_a_side_outside_the_supported_dates() -> None:
+    # Only Saturday and Sunday are working days. Friday 9999-12-31 is one day from a
+    # Saturday that does not exist and five days from Sunday the 26th; Monday 0001-01-01
+    # is one day from a Sunday that does not exist and five days from Saturday the 6th.
+    weekends_only = Calendar((0, 1, 2, 3, 4))
+    assert weekends_only.roll(date(9999, 12, 31), Roll.NEAREST) == date(9999, 12, 26)
+    assert weekends_only.roll(date(1, 1, 1), Roll.NEAREST) == date(1, 1, 6)
+
+
 @pytest.mark.parametrize(
     ("text", "member"),
     [

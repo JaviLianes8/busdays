@@ -77,6 +77,10 @@ def test_equal_calendars_hash_alike_and_differ_from_others() -> None:
     assert len({first, second}) == 1
 
 
+def test_the_hash_covers_the_holidays() -> None:
+    assert hash(Calendar(holidays=[NEW_YEAR])) != hash(Calendar(holidays=[date(2026, 1, 2)]))
+
+
 def test_repr_round_trips() -> None:
     calendar = Calendar((4, 5), [NEW_YEAR])
     assert repr(calendar) == "Calendar(weekend=(4, 5), holidays=(datetime.date(2026, 1, 1),))"
@@ -117,6 +121,13 @@ def test_a_month_without_business_days_is_an_error() -> None:
     december = [date(9999, 12, day) for day in range(1, 32)]
     with pytest.raises(ValueError, match="9999-12 has no business day"):
         first_business_day(9999, 12, holidays=december)
+
+
+def test_a_month_of_holidays_after_a_working_day_has_no_business_day() -> None:
+    # Every day works, so the day before 1 February is a business day of January.
+    february = [date(2026, 2, day) for day in range(1, 29)]
+    with pytest.raises(ValueError, match="2026-02 has no business day"):
+        last_business_day(2026, 2, weekend=(), holidays=february)
 
 
 @pytest.mark.parametrize(("year", "month"), [(2026, 13), (2026, 0), (0, 1), (10000, 1)])

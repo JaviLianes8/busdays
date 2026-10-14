@@ -79,6 +79,12 @@ def test_holidays_must_be_an_iterable_of_plain_dates(holidays: object) -> None:
         Calendar(holidays=holidays)  # type: ignore[arg-type]
 
 
+def test_a_string_or_a_single_date_is_not_a_holiday_list() -> None:
+    for holidays in ("2026-01-05", b"2026-01-05", MON):
+        with pytest.raises(TypeError, match=r"iterable of datetime.date"):
+            Calendar(holidays=holidays)  # type: ignore[arg-type]
+
+
 def test_a_full_weekend_still_answers_questions_that_need_no_business_day() -> None:
     everything = Calendar(range(7))
     assert everything.is_business_day(MON) is False
@@ -109,6 +115,14 @@ def test_stepping_past_the_last_date_is_an_overflow_error() -> None:
         add_business_days(MON, 10**12)
     with pytest.raises(OverflowError):
         add_business_days(MON, -(10**12))
+
+
+def test_the_day_just_past_either_end_is_an_overflow_error() -> None:
+    # With no weekend the next business day is exactly one past the last date.
+    with pytest.raises(OverflowError, match="years 1 to 9999"):
+        next_business_day(date(9999, 12, 31), weekend=())
+    with pytest.raises(OverflowError, match="years 1 to 9999"):
+        prev_business_day(date(1, 1, 1), weekend=())
 
 
 def test_the_last_and_first_dates_are_reachable() -> None:

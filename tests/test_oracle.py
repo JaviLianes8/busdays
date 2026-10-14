@@ -72,7 +72,11 @@ def test_month_helpers_match_numpy(seed: int) -> None:
     month = np.datetime64(f"{base.year:04d}-{base.month:02d}")
     try:
         first = _np_date(np.busday_offset(month, 0, roll="forward", busdaycal=numpy_calendar))
-        last = _np_date(np.busday_offset(month + 1, -1, roll="forward", busdaycal=numpy_calendar))
+        last = _np_date(
+            np.busday_offset(
+                month + np.timedelta64(1, "M"), -1, roll="forward", busdaycal=numpy_calendar
+            )
+        )
     except ValueError:
         return
     if first.month == base.month:

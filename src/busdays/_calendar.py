@@ -130,7 +130,7 @@ class Calendar:
 
     def _iterate(self, first: int, last: int) -> Iterator[date]:
         kernel = self._kernel
-        if first >= last or not kernel.per_week:
+        if not kernel.per_week:
             return
         ordinal = kernel.following(first)
         while ordinal < last:
