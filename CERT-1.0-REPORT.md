@@ -175,12 +175,40 @@ was also rerun after its final edit.
 
 | Stage | Status |
 | --- | --- |
-| a. API and docs | PENDING |
+| a. API and docs | A-01 fixed; independent re-review pending |
 | b. Correctness and ground truth | PENDING |
-| c. Adversarial and robustness | PENDING |
+| c. Adversarial and robustness | C1 and C2 fixed; independent re-review pending |
 | d. Packaging and real e2e | PENDING |
-| e. Contract strength | PENDING |
+| e. Contract strength | E-001 fixed; independent re-review pending |
 | Independent reviewer, item 16 | PENDING |
 | Merge and publication, item 17 | PENDING |
 
 Preparation does not claim an independent verdict or authorize publication.
+
+### QA fixes, round 1 (2026-11-01)
+
+Reviewed baseline: `dfd438480a7ea661da1a7be0f81f8dd8d91d632b`.
+Fix commit: `2417ec5cf9395fd87a2371aac5b9b8f5b486e0a3`
+(`fix certification round one findings`).
+
+| Finding | Change and verification |
+| --- | --- |
+| A-01, low | Import `date` in `Calendar.holidays`. Ordinary `doctest.testmod(busdays)` has a dedicated contract with no injected globals. All 14 module doctests pass. |
+| C1, medium | Validate `Roll` construction before Enum formats invalid values. The 100,000-level built-in list and an invalid string with a raising `repr` now produce bounded `ValueError`. Existing aliases, member identity and pickle round trips pass. |
+| C2, medium | Reject more than 4096 arguments before argparse runs, as permitted by the finding. The guide, help and changelog document the limit and using files for large holiday sets. Contracts accept the exact limit and reject excess date/file options before parsing. The 64,000-option reproduction exits 2 in 0.073 seconds locally. |
+| E-001, medium | Add contracts for combining two holiday files and rejecting malformed input in the second file. Production file aggregation remains unchanged. M52 was applied in a scratch copy; both contracts fail with the expected wrong result and missing error. |
+
+The behavior contracts were run against the original implementation before fixing
+C1 and C2 and failed on the reported paths. The standard doctest contract also
+failed before the documentation fix. Both E-001 contracts pass against production
+and fail against M52; no surviving mutation is claimed as resolved without a failure.
+
+Local validation on CPython 3.14.6: `ruff format --check .`, `ruff check .`,
+`mypy --strict src`, and `mypy --strict src tests scripts` each exit zero. The full
+suite, with the default marker restriction removed, passes 716 tests including
+packaging and upgrade checks. All pytest runs use a 300-second per-test timeout
+and temporary directories under the certification scratch directory. The existing
+interpreter matrix above describes preparation, not a new matrix for this fix round.
+
+All four reported findings are fixed. No findings are disputed. Independent lens
+verdicts remain pending re-review; these checks do not authorize merge or publication.
