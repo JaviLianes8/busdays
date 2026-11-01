@@ -23,10 +23,9 @@ DEFAULT_WEEKEND = (5, 6)
 class Calendar:
     """An immutable business-day calendar: which weekdays are off, and which dates.
 
-    Holidays that fall on a weekend day are dropped and duplicates merged, as
-    ``numpy.busdaycalendar`` does. Building one sorts the holidays once; after that,
-    counts take O(log holidays) time and offsets O(log(holidays) ** 2), however far
-    apart the dates are.
+    Holidays on weekend days are dropped and duplicates merged, as in numpy.
+    Construction sorts holidays once. Counts take O(log holidays) time and offsets
+    O(log(holidays) ** 2), however far apart the dates are.
 
     >>> Calendar().weekmask
     '1111100'
@@ -79,6 +78,7 @@ class Calendar:
     def holidays(self) -> tuple[date, ...]:
         """The holidays that fall on working weekdays, sorted and without duplicates.
 
+        >>> from datetime import date
         >>> Calendar(holidays=[date(2026, 1, 1)]).holidays
         (datetime.date(2026, 1, 1),)
         """

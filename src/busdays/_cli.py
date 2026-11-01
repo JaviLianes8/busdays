@@ -64,7 +64,10 @@ def _common() -> Parser:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = Parser(prog="busdays", description="Business-day arithmetic.")
+    parser = Parser(
+        prog="busdays",
+        description="Business-day arithmetic. At most 4096 arguments; use files for large sets.",
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     commands = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
     common = [_common()]
@@ -130,7 +133,11 @@ def _answer(args: argparse.Namespace) -> tuple[Iterable[object], int]:
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry point for ``busdays`` and ``python -m busdays``; returns the exit code."""
     parser = _parser()
-    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    arguments = sys.argv[1:] if argv is None else argv
+    # Bound argparse's repeated-option copying before it starts parsing.
+    if len(arguments) > 4096:
+        parser.error("expected at most 4096 arguments; use holiday files for large sets")
+    args = parser.parse_args(arguments)
     try:
         lines, code = _answer(args)
     except (ValueError, OverflowError, OSError) as error:

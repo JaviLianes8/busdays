@@ -29,6 +29,12 @@ def test_every_public_docstring_has_a_passing_example() -> None:
     assert result.attempted >= 24
 
 
+def test_standard_doctest_execution() -> None:
+    result = doctest.testmod(busdays)
+    assert result.failed == 0
+    assert result.attempted > 0
+
+
 def test_public_surface_has_no_accidental_imports() -> None:
     assert {name for name in vars(busdays) if not name.startswith("_")} == set(busdays.__all__)
 

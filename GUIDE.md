@@ -93,6 +93,10 @@ Run `busdays --help` or `python -m busdays --help`. Commands are `add`, `count`,
 `is` and `list`. Dates must use `YYYY-MM-DD`; signed offsets use ASCII decimal digits.
 Each command accepts `--weekend`, `--weekmask`, repeated `--holiday` dates and repeated
 `--holidays` files. Weekend and weekmask options are mutually exclusive.
+Invocations accept at most 4096 arguments, excluding the executable name. Each
+option and separate value counts as one argument; `--holiday=2026-01-05` counts as
+one. Larger invocations fail with exit status 2 before argument parsing. Use holiday
+files for large date sets; this limit does not restrict the number of dates in a file.
 
 Holiday files are UTF-8, optionally beginning with a byte order mark, with one ISO date
 per line. Blank lines and text after `#` are ignored. `--holidays -` reads stdin once.

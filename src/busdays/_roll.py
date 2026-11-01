@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from datetime import date
-from enum import Enum
+from enum import Enum, EnumMeta
+from typing import cast
 
 from busdays._kernel import MAX_ORDINAL, MIN_ORDINAL, Kernel
 
@@ -11,7 +12,13 @@ from busdays._kernel import MAX_ORDINAL, MIN_ORDINAL, Kernel
 _ALIASES = {"forward": "following", "backward": "preceding"}
 
 
-class Roll(str, Enum):
+class _RollMeta(EnumMeta):
+    def __call__(cls, value: object) -> Roll:  # type: ignore[override]
+        # Enum formats the original value even when _missing_ raises an error.
+        return cast("type[Roll]", cls)._missing_(value)
+
+
+class Roll(str, Enum, metaclass=_RollMeta):
     """A business day convention, named as in numpy where numpy has it.
 
     ``Roll("modified_following")``, ``Roll("ModifiedFollowing")`` and numpy's
@@ -36,7 +43,7 @@ class Roll(str, Enum):
         return self.value
 
     @classmethod
-    def _missing_(cls, value: object) -> Roll | None:
+    def _missing_(cls, value: object) -> Roll:
         if not isinstance(value, str):
             raise ValueError("unknown roll: expected a convention name")
         key = "".join(char for char in value.lower() if char not in "_- ")

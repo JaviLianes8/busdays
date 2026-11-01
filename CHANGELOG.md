@@ -17,6 +17,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Invalid `Roll` construction rejects deeply nested values with a bounded `ValueError`
+  without formatting the input, preserving convention names, aliases and enum members.
+- CLI invocations accept at most 4096 arguments, excluding the executable name,
+  and reject larger inputs before parsing to bound repeated-option copying. Use
+  holiday files for larger date sets; file contents have no new date-count limit.
+- The `Calendar.holidays` docstring imports `date` so ordinary doctest execution works.
+- Regression tests enforce aggregation and validation of every repeated holiday file.
 - Integer-like arguments are annotated `SupportsIndex`, matching existing runtime
   support. Month helpers now use the normalized month when checking their result,
   fixing `__index__` objects that do not also compare equal to a plain integer.
