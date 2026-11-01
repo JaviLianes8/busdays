@@ -1,5 +1,7 @@
 # busdays
 
+[![Lianes8 Certified](https://lianes8studio.com/certified/lianes8-certified-badge.svg)](https://lianes8studio.com/certified)
+
 Zero-dependency business-day arithmetic with a configurable weekend mask and optional
 holidays: offsets, counts, roll conventions and month helpers.
 
@@ -72,9 +74,9 @@ gulf.weekmask  # -> '1111001'
 
 ### Roll conventions
 
-`roll` moves a date that is not a business day; a business day is never moved. The
-conventions are the ISDA ones (following, modified following, preceding) and the common
-non-ISDA ones (modified preceding, half-month modified following, nearest, unadjusted),
+`roll` moves a date that is not a business day; a business day is never moved. The conventions include following, modified following, preceding, modified preceding,
+half-month modified following, nearest and unadjusted, as defined by
+[QuantLib](https://github.com/lballabio/QuantLib/blob/master/ql/time/businessdayconvention.hpp),
 plus `raise`. Names are forgiving: `"modified_following"`, `"ModifiedFollowing"` and
 numpy's `"forward"` and `"backward"` all work. numpy's `"nat"` has no `date`
 equivalent and is refused.
@@ -127,18 +129,24 @@ input). Bad input exits with status 2. `python -m busdays` works too.
 
 ## Why
 
-Business-day math keeps getting reinvented because the existing options pull their
-weight the wrong way. `numpy.busday_offset` and `busday_count` require numpy for a
-few lines of date math. `workalendar` and `python-holidays` are large and opinionated:
-they ship their own regional calendars, which is the opposite of what you want when
-the holidays come from your own database. This library is the small, pure primitive in
-between: you pass the weekend mask and the holiday set, it does the arithmetic, and it
-depends on nothing but the standard library. Its results are checked against numpy in
-the test suite.
+Use busdays when your application already supplies its holidays and needs scalar
+`datetime.date` arithmetic without runtime dependencies. NumPy's
+[`busday_offset`](https://numpy.org/doc/stable/reference/generated/numpy.busday_offset.html)
+and [`busday_count`](https://numpy.org/doc/stable/reference/generated/numpy.busday_count.html)
+are a better fit when you already use NumPy arrays or need vectorized operations.
+Busdays keeps counts antisymmetric, supports nearest and half-month roll conventions,
+and includes a command line interface. It does not discover regional holidays for you.
+
+## Documentation
+
+The [GUIDE](https://github.com/JaviLianes8/busdays/blob/main/GUIDE.md) describes every
+contract, error and roll convention. The
+[CHANGELOG](https://github.com/JaviLianes8/busdays/blob/main/CHANGELOG.md) records release
+changes, including the upgrade from 0.2.0.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/JaviLianes8/busdays/blob/main/LICENSE).
 
 ## Links
 

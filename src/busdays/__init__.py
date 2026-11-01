@@ -16,7 +16,7 @@ from busdays._core import (
 )
 from busdays._roll import Roll
 
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "Calendar",
@@ -31,3 +31,8 @@ __all__ = [
     "prev_business_day",
     "roll",
 ]
+
+# Keep class serialization tied to the public import path.
+Calendar.__module__ = __name__
+Roll.__module__ = __name__
+del annotations

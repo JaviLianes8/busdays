@@ -6,6 +6,7 @@ import operator
 import re
 from collections.abc import Iterable, Sequence
 from datetime import date, datetime
+from typing import SupportsIndex
 
 DAY_NAMES = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 _NAME_RUN = re.compile(r"\s*([A-Za-z]{3})\s*")
@@ -15,7 +16,7 @@ def check_date(value: object, name: str) -> date:
     # A datetime is a date subclass that never compares equal to a plain date, so a
     # datetime holiday would silently never match: refuse it instead.
     if not isinstance(value, date) or isinstance(value, datetime):
-        raise TypeError(f"{name} must be a datetime.date, not {type(value).__name__}")
+        raise TypeError(f"{name} must be a datetime.date (not datetime)")
     return value
 
 
@@ -25,10 +26,10 @@ def check_int(value: object, name: str) -> int:
     try:
         return operator.index(value)  # type: ignore[arg-type]
     except TypeError:
-        raise TypeError(f"{name} must be an integer, not {type(value).__name__}") from None
+        raise TypeError(f"{name} must be an integer") from None
 
 
-def weekend_mask(weekend: Iterable[int]) -> tuple[bool, ...]:
+def weekend_mask(weekend: Iterable[SupportsIndex]) -> tuple[bool, ...]:
     """Working-day mask, Monday first, from the weekday numbers that are days off."""
     if isinstance(weekend, (str, bytes)):
         raise TypeError("weekend must be weekday numbers; use Calendar.from_weekmask for a string")
@@ -71,11 +72,11 @@ def _parse_day_names(text: str) -> tuple[bool, ...]:
         match = _NAME_RUN.match(text, position)
         name = match.group(1).capitalize() if match else ""
         if match is None or name not in DAY_NAMES:
-            raise ValueError(f"invalid weekmask {text!r}: use 7 digits or names like 'Mon Tue'")
+            raise ValueError("invalid weekmask: use 7 digits or names like 'Mon Tue'")
         days.add(DAY_NAMES.index(name))
         position = match.end()
     if not days:
-        raise ValueError(f"invalid weekmask {text!r}: it names no day")
+        raise ValueError("invalid weekmask: it names no day")
     return tuple(day in days for day in range(7))
 
 

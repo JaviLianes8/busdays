@@ -47,8 +47,8 @@ def test_a_weekend_string_points_at_from_weekmask() -> None:
 
 
 def test_integer_like_weekend_days_and_counts_are_accepted() -> None:
-    assert Calendar((Index(5), Index(6))) == Calendar()  # type: ignore[arg-type]
-    assert add_business_days(MON, Index(5)) == date(2026, 1, 12)  # type: ignore[arg-type]
+    assert Calendar((Index(5), Index(6))) == Calendar()
+    assert add_business_days(MON, Index(5)) == date(2026, 1, 12)
 
 
 @pytest.mark.parametrize("n", [1.0, True, "1", None])
