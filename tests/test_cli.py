@@ -67,7 +67,7 @@ def test_a_bad_line_in_a_holiday_file_names_the_line(
     listing.write_text("2026-01-05\n05/01/2026\n", encoding="utf-8")
     code, out, err = _run(capsys, "add", "2026-01-02", "1", "--holidays", str(listing))
     assert (code, out) == (2, "")
-    assert "holidays.txt:2" in err and "not an ISO date" in err
+    assert "holiday file line 2" in err and "not an ISO date" in err
 
 
 def test_a_missing_holiday_file_is_reported(

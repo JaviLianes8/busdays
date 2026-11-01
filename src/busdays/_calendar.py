@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Sequence
 from datetime import date
+from typing import SupportsIndex
 
-from busdays._kernel import MAX_ORDINAL, Kernel, to_date
+from busdays._kernel import Kernel, to_date
+from busdays._months import iterate, month_day
 from busdays._roll import Roll, adjust, parse_roll
 from busdays._validate import (
     check_date,
@@ -25,12 +27,17 @@ class Calendar:
     ``numpy.busdaycalendar`` does. Building one sorts the holidays once; after that,
     counts take O(log holidays) time and offsets O(log(holidays) ** 2), however far
     apart the dates are.
+
+    >>> Calendar().weekmask
+    '1111100'
     """
 
     __slots__ = ("_kernel",)
 
     def __init__(
-        self, weekend: Iterable[int] = DEFAULT_WEEKEND, holidays: Iterable[date] | None = None
+        self,
+        weekend: Iterable[SupportsIndex] = DEFAULT_WEEKEND,
+        holidays: Iterable[date] | None = None,
     ) -> None:
         mask = weekend_mask(weekend)
         self._kernel = Kernel(mask, holiday_ordinals(holidays, mask))
@@ -43,23 +50,38 @@ class Calendar:
 
         Day names are read without regard to case, and an all-zero mask is allowed
         (numpy refuses it); such a calendar has no business day.
+
+        >>> Calendar.from_weekmask("Sun Mon Tue Wed Thu").weekend
+        (4, 5)
         """
         mask = parse_weekmask(weekmask)
         return cls([day for day in range(7) if not mask[day]], holidays)
 
     @property
     def weekend(self) -> tuple[int, ...]:
-        """The weekday numbers that are days off, Monday being 0."""
+        """The weekday numbers that are days off, Monday being 0.
+
+        >>> Calendar().weekend
+        (5, 6)
+        """
         return tuple(day for day in range(7) if not self._kernel.mask[day])
 
     @property
     def weekmask(self) -> str:
-        """The working weekdays as seven ``0``/``1`` characters, Monday first."""
+        """The working weekdays as seven ``0``/``1`` characters, Monday first.
+
+        >>> Calendar().weekmask
+        '1111100'
+        """
         return "".join("1" if working else "0" for working in self._kernel.mask)
 
     @property
     def holidays(self) -> tuple[date, ...]:
-        """The holidays that fall on working weekdays, sorted and without duplicates."""
+        """The holidays that fall on working weekdays, sorted and without duplicates.
+
+        >>> Calendar(holidays=[date(2026, 1, 1)]).holidays
+        (datetime.date(2026, 1, 1),)
+        """
         return tuple(date.fromordinal(ordinal) for ordinal in self._kernel.holidays)
 
     def __eq__(self, other: object) -> bool:
@@ -77,16 +99,25 @@ class Calendar:
         return f"Calendar(weekend={self.weekend!r}, holidays={self.holidays!r})"
 
     def is_business_day(self, day: date) -> bool:
-        """Return whether ``day`` is neither a weekend day nor a holiday."""
+        """Return whether ``day`` is neither a weekend day nor a holiday.
+
+        >>> Calendar().is_business_day(date(2026, 1, 3))
+        False
+        """
         return self._kernel.is_business(check_date(day, "day").toordinal())
 
-    def add_business_days(self, start: date, n: int, *, roll: Roll | str | None = None) -> date:
+    def add_business_days(
+        self, start: date, n: SupportsIndex, *, roll: Roll | str | None = None
+    ) -> date:
         """Return the date ``n`` business days from ``start``.
 
         Without ``roll``, only the days landed on are counted: ``start`` need not be a
         business day, ``0`` returns it unchanged and any other ``n`` lands on a business
         day. With ``roll``, ``start`` is first adjusted by that convention and ``n`` is
         then counted from it, as ``numpy.busday_offset`` does.
+
+        >>> Calendar().add_business_days(date(2026, 1, 2), 1)
+        datetime.date(2026, 1, 5)
         """
         ordinal = check_date(start, "start").toordinal()
         steps = check_int(n, "n")
@@ -110,58 +141,60 @@ class Calendar:
         """Count business days in the half-open interval ``[a, b)``.
 
         The count is antisymmetric: swapping the dates negates it.
+
+        >>> Calendar().business_days_between(date(2026, 1, 5), date(2026, 1, 12))
+        5
         """
         start = check_date(a, "a").toordinal()
         return self._kernel.count(start, check_date(b, "b").toordinal())
 
     def next_business_day(self, day: date) -> date:
-        """Return the first business day strictly after ``day``."""
+        """Return the first business day strictly after ``day``.
+
+        >>> Calendar().next_business_day(date(2026, 1, 2))
+        datetime.date(2026, 1, 5)
+        """
         return self.add_business_days(day, 1)
 
     def prev_business_day(self, day: date) -> date:
-        """Return the last business day strictly before ``day``."""
+        """Return the last business day strictly before ``day``.
+
+        >>> Calendar().prev_business_day(date(2026, 1, 5))
+        datetime.date(2026, 1, 2)
+        """
         return self.add_business_days(day, -1)
 
     def roll(self, day: date, convention: Roll | str = Roll.FOLLOWING) -> date:
-        """Move ``day`` to a business day by ``convention``; a business day stays put."""
+        """Move ``day`` to a business day by ``convention``; a business day stays put.
+
+        >>> Calendar().roll(date(2026, 1, 31), "modifiedfollowing")
+        datetime.date(2026, 1, 30)
+        """
         ordinal = check_date(day, "day").toordinal()
         return to_date(adjust(self._kernel, ordinal, parse_roll(convention)))
 
     def business_days(self, start: date, stop: date) -> Iterator[date]:
-        """Yield the business days in ``[start, stop)`` in order; nothing if ``stop <= start``."""
+        """Yield the business days in ``[start, stop)`` in order; nothing if ``stop <= start``.
+
+        >>> list(Calendar().business_days(date(2026, 1, 2), date(2026, 1, 5)))
+        [datetime.date(2026, 1, 2)]
+        """
         first = check_date(start, "start").toordinal()
         last = check_date(stop, "stop").toordinal()
-        return self._iterate(first, last)
+        return iterate(self._kernel, first, last)
 
-    def _iterate(self, first: int, last: int) -> Iterator[date]:
-        kernel = self._kernel
-        if not kernel.per_week:
-            return
-        ordinal = kernel.following(first)
-        while ordinal < last:
-            yield date.fromordinal(ordinal)
-            ordinal = ordinal + 1
-            while ordinal < last and not kernel.is_business(ordinal):
-                ordinal += 1
+    def first_business_day(self, year: SupportsIndex, month: SupportsIndex) -> date:
+        """Return the first business day of the month; ``ValueError`` if it has none.
 
-    def first_business_day(self, year: int, month: int) -> date:
-        """Return the first business day of the month; ``ValueError`` if it has none."""
-        first = date(check_int(year, "year"), check_int(month, "month"), 1).toordinal()
-        found = self._kernel.following(first)
-        if found > MAX_ORDINAL or date.fromordinal(found).month != month:
-            raise ValueError(f"{year:04d}-{month:02d} has no business day")
-        return date.fromordinal(found)
+        >>> Calendar().first_business_day(2026, 2)
+        datetime.date(2026, 2, 2)
+        """
+        return month_day(self._kernel, year, month, last=False)
 
-    def last_business_day(self, year: int, month: int) -> date:
-        """Return the last business day of the month; ``ValueError`` if it has none."""
-        first = date(check_int(year, "year"), check_int(month, "month"), 1)
-        found = self._kernel.preceding(_month_end(first))
-        if found < first.toordinal():
-            raise ValueError(f"{year:04d}-{month:02d} has no business day")
-        return date.fromordinal(found)
+    def last_business_day(self, year: SupportsIndex, month: SupportsIndex) -> date:
+        """Return the last business day of the month; ``ValueError`` if it has none.
 
-
-def _month_end(first: date) -> int:
-    if first.month == 12:
-        return first.replace(day=31).toordinal()
-    return first.replace(month=first.month + 1).toordinal() - 1
+        >>> Calendar().last_business_day(2026, 1)
+        datetime.date(2026, 1, 30)
+        """
+        return month_day(self._kernel, year, month, last=True)

@@ -16,6 +16,11 @@ class Roll(str, Enum):
 
     ``Roll("modified_following")``, ``Roll("ModifiedFollowing")`` and numpy's
     ``"forward"`` and ``"backward"`` are all accepted.
+
+    >>> str(Roll("modified_following"))
+    'modifiedfollowing'
+
+    Unknown values raise ``ValueError`` without quoting the input.
     """
 
     FOLLOWING = "following"
@@ -33,20 +38,23 @@ class Roll(str, Enum):
     @classmethod
     def _missing_(cls, value: object) -> Roll | None:
         if not isinstance(value, str):
-            return None
+            raise ValueError("unknown roll: expected a convention name")
         key = "".join(char for char in value.lower() if char not in "_- ")
         key = _ALIASES.get(key, key)
-        return next((member for member in cls if member.value == key), None)
+        for member in cls:
+            if member.value == key:
+                return member
+        raise ValueError("unknown roll: expected a convention name")
 
 
 def parse_roll(value: Roll | str) -> Roll:
     if not isinstance(value, str):
-        raise TypeError(f"roll must be a Roll or a string, not {type(value).__name__}")
+        raise TypeError("roll must be a Roll or a string")
     try:
         return Roll(value)
     except ValueError:
         names = ", ".join(member.value for member in Roll)
-        raise ValueError(f"unknown roll {value!r}; expected one of {names}") from None
+        raise ValueError(f"unknown roll; expected one of {names}") from None
 
 
 def _month(ordinal: int) -> tuple[int, int] | None:

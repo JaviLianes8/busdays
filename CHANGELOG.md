@@ -6,6 +6,35 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-01
+
+### Stable
+
+- The eleven public exports, their argument names/defaults, calendar normalization,
+  half-open antisymmetric counts, offsets, roll conventions and CLI commands.
+- Runnable public docstrings, full API guide, seeded reference comparisons, wheel
+  installation and upgrade checks, and a typed, dependency-free distribution.
+
+### Changed
+
+- Integer-like arguments are annotated `SupportsIndex`, matching existing runtime
+  support. Month helpers now use the normalized month when checking their result,
+  fixing `__index__` objects that do not also compare equal to a plain integer.
+- `first_business_day` rejects a fully closed month even when the next working date
+  falls in the same month of a later year, rather than returning that later date.
+- Invalid roll/weekmask values and type names are no longer echoed in validation
+  messages. CLI errors omit invalid arguments and holiday file paths; malformed
+  holiday files report the line number, and unreadable files report a UTF-8 error.
+- Huge CLI offsets fail with a bounded date-range diagnostic, without echoing the
+  integer. Leading zeros work even beyond Python's integer-string conversion limit.
+- Closed output pipes replace stdout with an in-memory sink, avoiding another failing
+  shutdown flush and an open file descriptor. Embedded callers must restore stdout
+  before reuse.
+- `Calendar` and `Roll` identify their public module as `busdays`; old calendar
+  pickles remain readable. The accidental `annotations` export is removed.
+- Source archives contain library code and consumer documentation, excluding tests,
+  development tools and the upstream manifest. Those remain in the repository.
+
 ## [0.2.0]
 
 ### Added

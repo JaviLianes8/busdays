@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -128,6 +128,12 @@ def test_a_month_of_holidays_after_a_working_day_has_no_business_day() -> None:
     february = [date(2026, 2, day) for day in range(1, 29)]
     with pytest.raises(ValueError, match="2026-02 has no business day"):
         last_business_day(2026, 2, weekend=(), holidays=february)
+
+
+def test_first_business_day_never_returns_the_same_month_in_a_later_year() -> None:
+    holidays = [NEW_YEAR + timedelta(days=offset) for offset in range(365)]
+    with pytest.raises(ValueError, match="2026-01 has no business day"):
+        first_business_day(2026, 1, holidays=holidays)
 
 
 @pytest.mark.parametrize(("year", "month"), [(2026, 13), (2026, 0), (0, 1), (10000, 1)])

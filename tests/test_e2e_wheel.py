@@ -18,14 +18,32 @@ import pytest
 import busdays
 
 ROOT = Path(__file__).resolve().parent.parent
-MODULES = ("__init__", "__main__", "_calendar", "_cli", "_core", "_kernel", "_roll", "_validate")
+MODULES = (
+    "__init__",
+    "__main__",
+    "_arguments",
+    "_calendar",
+    "_cli",
+    "_core",
+    "_kernel",
+    "_months",
+    "_roll",
+    "_validate",
+)
 
 
 def _run(cmd: list[str], stdin: str | None = None) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     return subprocess.run(
-        cmd, input=stdin, capture_output=True, text=True, env=env, timeout=600, check=False
+        cmd,
+        input=stdin,
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=240,
+        check=False,
+        cwd=os.environ.get("BUSDAYS_E2E_CWD", str(ROOT)),
     )
 
 
@@ -42,6 +60,10 @@ def test_wheel_installs_and_the_script_works(tmp_path: Path) -> None:
     for module in MODULES:
         assert f"busdays/{module}.py" in names
     assert "busdays/py.typed" in names
+    assert any(name.endswith("/licenses/LICENSE") for name in names)
+    assert all(
+        name.startswith(("busdays/", f"busdays-{busdays.__version__}.dist-info/")) for name in names
+    )
     assert not [n for n in names if n.startswith(("data/", "tests/", "scripts/"))]
     metadata = next(n for n in names if n.endswith(".dist-info/METADATA"))
     requires = [
@@ -79,17 +101,16 @@ def test_wheel_installs_and_the_script_works(tmp_path: Path) -> None:
         "c = b.Calendar.from_weekmask('Sun Mon Tue Wed Thu'); "
         "print(c.add_business_days(d.date(2026, 1, 1), 1), b.Roll('forward'), b.__file__)"
     )
-    shown = _run([str(python), "-c", probe]).stdout
+    shown = _run([str(python), "-I", "-c", probe]).stdout
     assert shown.startswith("2026-01-04 following ") and str(env_dir) in shown
 
 
 @pytest.mark.e2e
-def test_sdist_ships_the_manifest_but_no_upstream_copies(tmp_path: Path) -> None:
+def test_sdist_ships_only_library_and_consumer_documentation(tmp_path: Path) -> None:
     built = _run([sys.executable, "-m", "build", "--sdist", "--outdir", str(tmp_path), str(ROOT)])
     assert built.returncode == 0, built.stderr
     (sdist,) = tmp_path.glob("busdays-*.tar.gz")
     with tarfile.open(sdist) as archive:
         names = [name.split("/", 1)[1] for name in archive.getnames() if "/" in name]
-    assert "data/upstream/MANIFEST.json" in names
-    assert "scripts/fetch_upstream.py" in names and "tests/conftest.py" in names
-    assert [n for n in names if n.startswith("data/")] == ["data/upstream/MANIFEST.json"]
+    assert {"LICENSE", "README.md", "GUIDE.md", "CHANGELOG.md", "pyproject.toml"} <= set(names)
+    assert not [n for n in names if n.startswith(("data/", "tests/", "scripts/", "."))]

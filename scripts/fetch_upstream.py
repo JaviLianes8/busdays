@@ -13,18 +13,21 @@ from __future__ import annotations
 import datetime
 import hashlib
 import json
+import os
 import sys
 import urllib.request
 from pathlib import Path
 
-FOLDER = Path(__file__).resolve().parents[1] / "data" / "upstream"
+MANIFEST = Path(__file__).resolve().parents[1] / "data" / "upstream" / "MANIFEST.json"
+FOLDER = Path(os.environ.get("BUSDAYS_UPSTREAM", str(MANIFEST.parent)))
 # Some of the sites refuse requests without a browser-like agent.
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; busdays-fetch)"}
 
 
 def main(argv: list[str]) -> int:
     accept = "--accept-new" in argv
-    path = FOLDER / "MANIFEST.json"
+    path = MANIFEST
+    FOLDER.mkdir(parents=True, exist_ok=True)
     manifest = json.loads(path.read_text(encoding="utf-8"))
     failed = 0
     for name, entry in manifest.items():
@@ -37,7 +40,8 @@ def main(argv: list[str]) -> int:
                 print(f"{name}: got {len(body)} bytes, sha256 {digest}; manifest differs")
                 failed += 1
                 continue
-            entry.update(size=len(body), sha256=digest, fetched=str(datetime.date.today()))
+            entry.update(size=len(body), sha256=digest)
+        entry["fetched"] = str(datetime.date.today())
         (FOLDER / name).write_bytes(body)
         print(f"{name}: ok")
     if accept:

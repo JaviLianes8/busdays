@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import argparse
-import contextlib
 import errno
-import os
+import io
 import re
 import sys
 from collections.abc import Iterable, Sequence
@@ -13,6 +12,7 @@ from datetime import date
 from pathlib import Path
 
 from busdays import __version__
+from busdays._arguments import Parser
 from busdays._calendar import Calendar
 from busdays._roll import Roll, parse_roll
 
@@ -25,13 +25,17 @@ def _day(text: str) -> date:
             return date.fromisoformat(text)
     except ValueError:
         pass
-    raise argparse.ArgumentTypeError(f"not an ISO date (YYYY-MM-DD): {text!r}")
+    raise argparse.ArgumentTypeError("not an ISO date (YYYY-MM-DD)")
 
 
 def _count(text: str) -> int:
     if not re.fullmatch(r"[+-]?[0-9]+", text):
-        raise argparse.ArgumentTypeError(f"not a whole number: {text!r}")
-    return int(text)
+        raise argparse.ArgumentTypeError("not a whole number")
+    digits = text.lstrip("+-").lstrip("0") or "0"
+    # Any larger offset necessarily leaves the supported date range.
+    if len(digits) > 7:
+        raise argparse.ArgumentTypeError("the result falls outside years 1 to 9999")
+    return int(("-" if text.startswith("-") else "") + digits)
 
 
 def _roll(text: str) -> Roll:
@@ -43,12 +47,12 @@ def _roll(text: str) -> Roll:
 
 def _weekend(text: str) -> tuple[int, ...]:
     if not re.fullmatch(r"([0-6](,[0-6])*)?", text):
-        raise argparse.ArgumentTypeError(f"weekend must be weekday numbers like 5,6: {text!r}")
+        raise argparse.ArgumentTypeError("weekend must be weekday numbers like 5,6")
     return tuple(int(part) for part in text.split(",") if part)
 
 
-def _common() -> argparse.ArgumentParser:
-    common = argparse.ArgumentParser(add_help=False)
+def _common() -> Parser:
+    common = Parser(add_help=False)
     week = common.add_mutually_exclusive_group()
     week.add_argument("--weekend", type=_weekend, help="days off, Monday=0 (default: 5,6)")
     week.add_argument("--weekmask", help='working days, "1111100" or "Sun Mon Tue Wed Thu"')
@@ -60,7 +64,7 @@ def _common() -> argparse.ArgumentParser:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="busdays", description="Business-day arithmetic.")
+    parser = Parser(prog="busdays", description="Business-day arithmetic.")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     commands = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
     common = [_common()]
@@ -87,7 +91,10 @@ def _read_holidays(paths: Sequence[Path]) -> list[date]:
         raise ValueError("standard input can be given as --holidays only once")
     found: list[date] = []
     for path in paths:
-        text = sys.stdin.read() if str(path) == "-" else path.read_text(encoding="utf-8")
+        try:
+            text = sys.stdin.read() if str(path) == "-" else path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            raise ValueError("cannot read a holiday file as UTF-8") from None
         # Windows editors often save a byte order mark at the start of the file.
         for number, line in enumerate(text.lstrip(BOM).splitlines(), 1):
             entry = line.split("#", 1)[0].strip()
@@ -95,7 +102,7 @@ def _read_holidays(paths: Sequence[Path]) -> list[date]:
                 try:
                     found.append(_day(entry))
                 except argparse.ArgumentTypeError as error:
-                    raise ValueError(f"{path}:{number}: {error}") from None
+                    raise ValueError(f"holiday file line {number}: {error}") from None
     return found
 
 
@@ -138,8 +145,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         # Windows. Stop quietly, as the Python signal documentation recommends.
         if not isinstance(error, BrokenPipeError) and error.errno != errno.EINVAL:
             raise
-        # When stdout is not a real file (embedded use) there is nothing left to silence.
-        with contextlib.suppress(OSError, ValueError):
-            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        # Avoid another failed flush during interpreter shutdown.
+        sys.stdout = io.StringIO()
         return 1
     return code
