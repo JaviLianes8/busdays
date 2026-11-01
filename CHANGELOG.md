@@ -19,6 +19,8 @@ All notable changes to this project are documented here. The format follows
 
 - `Roll` normalizes string contents without invoking a subclass's `lower` override,
   preventing unexpected exceptions or selection of a different convention.
+- Regression tests also enforce normalization from string contents when subclasses
+  override `__str__`, `__iter__` or `replace`, preserving the existing behavior.
 - Regression tests enforce the CLI argument limit through process arguments and
   real module invocations, including rejection before help output.
 - Invalid `Roll` construction rejects deeply nested values with a bounded `ValueError`
