@@ -50,3 +50,51 @@ def test_roll_ignores_replace_override(name: str, expected: Roll, raises: bool) 
             return "preceding"
 
     assert Roll(Name(name)) is expected
+
+
+@pytest.mark.parametrize(("name", "expected"), _NAMES)
+@pytest.mark.parametrize("raises", [False, True], ids=["misleading", "raising"])
+def test_roll_ignores_getitem_override(name: str, expected: Roll, raises: bool) -> None:
+    class Name(str):
+        def __getitem__(self, key: SupportsIndex | slice, /) -> str:
+            if raises:
+                raise RuntimeError("string slicing must not run")
+            return "preceding"
+
+    assert Roll(Name(name)) is expected
+
+
+@pytest.mark.parametrize(("name", "expected"), _NAMES)
+@pytest.mark.parametrize("raises", [False, True], ids=["misleading", "raising"])
+def test_roll_ignores_strip_override(name: str, expected: Roll, raises: bool) -> None:
+    class Name(str):
+        def strip(self, chars: str | None = None, /) -> str:
+            if raises:
+                raise RuntimeError("string stripping must not run")
+            return "preceding"
+
+    assert Roll(Name(name)) is expected
+
+
+@pytest.mark.parametrize(("name", "expected"), _NAMES)
+@pytest.mark.parametrize("raises", [False, True], ids=["misleading", "raising"])
+def test_roll_ignores_encode_override(name: str, expected: Roll, raises: bool) -> None:
+    class Name(str):
+        def encode(self, encoding: str = "utf-8", errors: str = "strict") -> bytes:
+            if raises:
+                raise RuntimeError("string encoding must not run")
+            return b"preceding"
+
+    assert Roll(Name(name)) is expected
+
+
+@pytest.mark.parametrize(("name", "expected"), _NAMES)
+@pytest.mark.parametrize("raises", [False, True], ids=["misleading", "raising"])
+def test_roll_ignores_format_override(name: str, expected: Roll, raises: bool) -> None:
+    class Name(str):
+        def __format__(self, format_spec: str, /) -> str:
+            if raises:
+                raise RuntimeError("string formatting must not run")
+            return "preceding"
+
+    assert Roll(Name(name)) is expected

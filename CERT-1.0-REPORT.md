@@ -179,7 +179,7 @@ was also rerun after its final edit.
 | b. Correctness and ground truth | PENDING |
 | c. Adversarial and robustness | C1 and C2 confirmed fixed in round 2; C3 fixed, independent re-review pending |
 | d. Packaging and real e2e | PENDING |
-| e. Contract strength | E-001 and E-002 confirmed fixed; E-003, E-004 and E-005 fixed in round 3, independent re-review pending |
+| e. Contract strength | E-001 through E-005 confirmed fixed; E-006 through E-009 fixed in round 4, independent re-review pending |
 | Independent reviewer, item 16 | PENDING |
 | Merge and publication, item 17 | PENDING |
 
@@ -274,4 +274,41 @@ uses a 300-second per-test timeout and temporary directories under the certifica
 scratch directory. The interpreter matrix above remains the preparation matrix.
 
 All three round 3 findings are fixed. No findings are disputed. Independent
+re-review remains pending; these results do not authorize merge or publication.
+
+### QA fixes, round 4 (2026-11-01)
+
+Reviewed baseline: `5987094513083e97cb8bb02605da462c448175f8`.
+Fix commit: `cover additional roll subclass normalization hooks`, the direct child
+of that baseline on `release/1.0.0` containing this section.
+
+All four findings identify missing regression coverage. The production
+implementation already satisfies these contracts; no API or behavior change is
+needed. Lens e independently confirmed E-003, E-004 and E-005 fixed in round 4.
+
+`tests/test_roll_subclasses.py` adds 24 cases with handwritten expectations:
+canonical `following`, alias `Forward` and mixed-case `Modified_Following`, each
+with misleading and raising overrides for the four methods below. All 42 tests
+in that file pass on the reviewed implementation. Each reported mutation was
+then injected alone in a scratch copy and tested against these contracts.
+
+| Finding | Injected replacement for `str.lower(value)` | Detecting contract | Result |
+| --- | --- | --- | --- |
+| E-006, medium | `str.lower(value[:])` | `test_roll_ignores_getitem_override` | Six failures: three wrong conventions and three unexpected exceptions; 36 other cases pass. |
+| E-007, medium | `str.lower(value.strip())` | `test_roll_ignores_strip_override` | Six failures: three wrong conventions and three unexpected exceptions; 36 other cases pass. |
+| E-008, medium | `str.lower(value.encode().decode())` | `test_roll_ignores_encode_override` | Six failures: three wrong conventions and three unexpected exceptions; 36 other cases pass. |
+| E-009, medium | `str.lower("{:s}".format(value))` | `test_roll_ignores_format_override` | Six failures: three wrong conventions and three unexpected exceptions; 36 other cases pass. |
+
+The scratch source was restored byte-for-byte, then all 42 contracts passed
+again. Mutation logs and results are retained under the certification scratch
+directory in `fix-r4/logs` and `fix-r4/results.json`.
+
+Local validation on CPython 3.14.6: `ruff format --check .`, `ruff check .`,
+`mypy --strict src`, and `mypy --strict src tests scripts` each exit zero. The full
+suite with the default marker restriction removed passes 768 tests, including
+packaging, upgrade and upstream-reference checks, with no skips. Every pytest run
+uses a 300-second per-test timeout and temporary directories under the certification
+scratch directory. The interpreter matrix above remains the preparation matrix.
+
+All four round 4 findings are fixed. No findings are disputed. Independent
 re-review remains pending; these results do not authorize merge or publication.
