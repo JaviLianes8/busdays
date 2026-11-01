@@ -47,6 +47,9 @@ Funding = "https://buymeacoffee.com/jlianesglrs"
 [tool.hatch.build.targets.wheel]
 packages = ["src/busdays"]
 
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"
+
 [tool.hatch.build.targets.sdist]
 # Ship the library and consumer documentation only.
 include = [

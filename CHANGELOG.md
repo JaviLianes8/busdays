@@ -20,6 +20,8 @@ All notable changes to this project are documented here. The format follows
 - Integer-like arguments are annotated `SupportsIndex`, matching existing runtime
   support. Month helpers now use the normalized month when checking their result,
   fixing `__index__` objects that do not also compare equal to a plain integer.
+- `first_business_day` rejects a fully closed month even when the next working date
+  falls in the same month of a later year, rather than returning that later date.
 - Invalid roll/weekmask values and type names are no longer echoed in validation
   messages. CLI errors omit invalid arguments and holiday file paths; malformed
   holiday files report the line number, and unreadable files report a UTF-8 error.

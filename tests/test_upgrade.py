@@ -32,9 +32,13 @@ for _ in range(1000):
         ('business_days_between', (start, stop)), ('next_business_day', (start,)),
         ('prev_business_day', (start,)), ('first_business_day', (start.year, start.month)),
         ('last_business_day', (start.year, start.month))]:
-        result = getattr(c, name)(*args)
-        assert result == getattr(b, name)(*args, weekend=weekend, holidays=holidays)
-        results.append(str(result))
+        try:
+            result = getattr(c, name)(*args)
+        except ValueError:
+            results.append('ValueError')
+        else:
+            assert result == getattr(b, name)(*args, weekend=weekend, holidays=holidays)
+            results.append(str(result))
     results.append([str(x) for x in c.business_days(start, stop)])
     for mode in b.Roll:
         try:
@@ -47,6 +51,22 @@ if saved.exists():
     assert old == b.Calendar(holidays=[date(2026, 1, 1)])
     assert old.next_business_day(date(2025, 12, 31)) == date(2026, 1, 2)
 saved.write_bytes(pickle.dumps(b.Calendar(holidays=[date(2026, 1, 1)])))
+closed = b.Calendar(holidays=[date(2026, 1, 1) + timedelta(days=n) for n in range(365)])
+if b.__version__ == '0.2.0':
+    assert closed.first_business_day(2026, 1) == date(2027, 1, 1)
+else:
+    try:
+        closed.first_business_day(2026, 1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('a closed month must not escape into a later year')
+for parse in [b.Roll, b.Calendar.from_weekmask]:
+    try:
+        parse('private-token')
+    except ValueError as error:
+        assert ('private-token' in str(error)) == (b.__version__ == '0.2.0')
+assert b.Calendar.__module__ == ('busdays._calendar' if b.__version__ == '0.2.0' else 'busdays')
 print(json.dumps(results))
 """
 

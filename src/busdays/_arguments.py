@@ -12,6 +12,8 @@ class Parser(argparse.ArgumentParser):
             message = "invalid command; use --help for the command list"
         elif message.startswith("unrecognized arguments:"):
             message = "unrecognized arguments; use --help for usage"
+        elif message.startswith("ambiguous option:") or "ignored explicit argument" in message:
+            message = "invalid option; use --help for usage"
         elif len(message) > 300:
             message = "invalid arguments; use --help for usage"
         super().error(message)

@@ -34,7 +34,7 @@ def month_day(kernel: Kernel, year: SupportsIndex, month: SupportsIndex, *, last
         found = kernel.following(first.toordinal())
     if (
         not first.toordinal() <= found <= MAX_ORDINAL
-        or date.fromordinal(found).month != first.month
+        or date.fromordinal(found).replace(day=1) != first
     ):
         raise ValueError(f"{first.year:04d}-{first.month:02d} has no business day")
     return date.fromordinal(found)

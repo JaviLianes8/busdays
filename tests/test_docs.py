@@ -14,6 +14,11 @@ ROOT = Path(__file__).resolve().parent.parent
 BLOCK = re.compile(r"```python\n(.*?)```", re.S)
 
 
+def test_guide_examples_execute() -> None:
+    for block in BLOCK.findall((ROOT / "GUIDE.md").read_text(encoding="utf-8")):
+        exec(block, {})
+
+
 def test_documented_results_are_true() -> None:
     text = (ROOT / "README.md").read_text(encoding="utf-8")
     namespace: dict[str, object] = {}

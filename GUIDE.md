@@ -103,11 +103,14 @@ returning; an embedded caller should restore its stream before invoking the CLI 
 
 ## Upgrading from 0.2.0
 
-The eleven exported names, argument names/defaults and valid date results remain
-stable. Integer-like arguments now have matching type annotations. Month helpers now
+The eleven exported names and argument names/defaults remain stable. Date results
+are preserved except for the two month-helper corrections below. Integer-like
+arguments now have matching type annotations. Month helpers now
 compare the normalized integer month, so an object implementing only `__index__`
-works consistently. Diagnostic text omits invalid values and file paths. Huge CLI
-counts fail with a bounded message; arbitrarily many leading zeros remain valid.
+works consistently. The first-day helper also rejects closed months whose next
+working date is in the same month of a later year. Diagnostic text omits invalid
+values and file paths. Huge CLI counts fail with a bounded message; arbitrarily many
+leading zeros remain valid.
 Class metadata and new pickles use the public `busdays` module; existing 0.2.0
 calendar pickles still load. The accidental top-level `annotations` attribute is
 removed. Source distributions contain only library code and consumer documentation;

@@ -51,6 +51,11 @@ def test_integer_like_weekend_days_and_counts_are_accepted() -> None:
     assert add_business_days(MON, Index(5)) == date(2026, 1, 12)
 
 
+def test_month_helpers_use_normalized_integer_values() -> None:
+    assert Calendar().first_business_day(Index(2026), Index(2)) == date(2026, 2, 2)
+    assert Calendar().last_business_day(Index(2026), Index(2)) == date(2026, 2, 27)
+
+
 @pytest.mark.parametrize("n", [1.0, True, "1", None])
 def test_counts_must_be_integers(n: object) -> None:
     with pytest.raises(TypeError, match="n must be an integer"):

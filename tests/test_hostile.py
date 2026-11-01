@@ -54,6 +54,8 @@ def test_large_parsers_and_errors_are_bounded(size: int) -> None:
     "args",
     [
         ["secret-token"],
+        ["--help=secret-token"],
+        ["is", "2026-01-05", "--ho=secret-token"],
         ["is", "secret-token"],
         ["is", "2026-01-05", "secret-token"],
         ["roll", "2026-01-05", "secret-token"],
