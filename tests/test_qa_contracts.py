@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -28,6 +31,24 @@ def test_invalid_roll_does_not_call_repr() -> None:
         Roll(InvalidName("invalid"))
 
 
+@pytest.mark.parametrize("name", ["following", "Forward", "Modified_Following"])
+def test_roll_ignores_raising_lower_override(name: str) -> None:
+    class Name(str):
+        def lower(self) -> str:
+            raise RuntimeError("SECRET_SENTINEL")
+
+    assert Roll(Name(name)) is Roll(name)
+
+
+@pytest.mark.parametrize("name", ["following", "Forward", "Modified_Following"])
+def test_roll_ignores_misleading_lower_override(name: str) -> None:
+    class Name(str):
+        def lower(self) -> str:
+            return "preceding"
+
+    assert Roll(Name(name)) is Roll(name)
+
+
 @pytest.mark.parametrize("option", ["--holiday=2026-01-06", "--holidays=unused.txt"])
 def test_cli_rejects_excess_arguments_before_parsing(
     option: str, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
@@ -48,6 +69,47 @@ def test_cli_rejects_excess_arguments_before_parsing(
 def test_cli_accepts_the_argument_limit(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["is", "2026-01-05"] + ["--holiday=2026-01-06"] * 4094) == 0
     assert capsys.readouterr() == ("yes\n", "")
+
+
+@pytest.mark.parametrize("count", [4096, 4097])
+def test_cli_process_arguments_obey_limit(
+    count: int, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["busdays", *(["--help"] * count)])
+    with pytest.raises(SystemExit) as error:
+        main()
+    output = capsys.readouterr()
+    if count == 4096:
+        assert error.value.code == 0
+        assert "usage: busdays" in output.out
+        assert output.err == ""
+    else:
+        assert error.value.code == 2
+        assert output.out == ""
+        assert "at most 4096 arguments" in output.err
+        assert len(output.err) < 500
+
+
+@pytest.mark.parametrize("count", [4096, 4097])
+def test_cli_subprocess_arguments_obey_limit(count: int) -> None:
+    env = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parents[1] / "src"))
+    result = subprocess.run(
+        [sys.executable, "-m", "busdays", *(["--help"] * count)],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=240,
+        check=False,
+    )
+    if count == 4096:
+        assert result.returncode == 0
+        assert "usage: busdays" in result.stdout
+        assert result.stderr == ""
+    else:
+        assert result.returncode == 2
+        assert result.stdout == ""
+        assert "at most 4096 arguments" in result.stderr
+        assert len(result.stderr) < 500
 
 
 def test_repeated_holiday_files_contribute_all_dates(

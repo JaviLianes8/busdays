@@ -177,9 +177,9 @@ was also rerun after its final edit.
 | --- | --- |
 | a. API and docs | A-01 fixed; independent re-review pending |
 | b. Correctness and ground truth | PENDING |
-| c. Adversarial and robustness | C1 and C2 fixed; independent re-review pending |
+| c. Adversarial and robustness | C1 and C2 confirmed fixed in round 2; C3 fixed, independent re-review pending |
 | d. Packaging and real e2e | PENDING |
-| e. Contract strength | E-001 fixed; independent re-review pending |
+| e. Contract strength | E-001 confirmed fixed in round 2; E-002 fixed, independent re-review pending |
 | Independent reviewer, item 16 | PENDING |
 | Merge and publication, item 17 | PENDING |
 
@@ -212,3 +212,30 @@ interpreter matrix above describes preparation, not a new matrix for this fix ro
 
 All four reported findings are fixed. No findings are disputed. Independent lens
 verdicts remain pending re-review; these checks do not authorize merge or publication.
+
+### QA fixes, round 2 (2026-11-01)
+
+Reviewed baseline: `eae87cba4476cab563e0c010bab1ab62235980f2`.
+Fix commit: `fix certification round two findings`, the direct child of that
+baseline on `release/1.0.0` containing this section.
+
+| Finding | Change and verification |
+| --- | --- |
+| C3, medium | Normalize with `str.lower(value)` so string subclasses cannot raise an unexpected exception or select another convention through a `lower` override. Six new contracts cover raising and misleading overrides with canonical, alias and separator-containing names. All six failed against the reviewed baseline and pass after the fix. Early nonstring rejection and bounded diagnostics remain covered. |
+| E-002, medium | Add contracts for `main()` through `sys.argv` and real `python -m busdays` subprocesses. Both accept exactly 4096 arguments and reject 4097 repeated `--help` arguments with exit 2, empty stdout and a bounded limit diagnostic. The production CLI already satisfies this behavior and needs no implementation change. |
+
+Mutation verification in a scratch copy:
+
+| Mutation | Result | Detecting contracts |
+| --- | --- | --- |
+| N06 / E-002: guard the limit with `argv is not None` | Killed; two failures, two passes | `test_cli_process_arguments_obey_limit[4097]` and `test_cli_subprocess_arguments_obey_limit[4097]` in `tests/test_qa_contracts.py` fail because the mutated CLI exits 0. Both 4096-argument boundary cases still pass. |
+
+Local validation on CPython 3.14.6: `ruff format --check .`, `ruff check .`,
+`mypy --strict src`, and `mypy --strict src tests scripts` each exit zero. The full
+suite with the default marker restriction removed passes 726 tests, including
+packaging, upgrade and upstream-reference checks, with no skips. Every pytest run
+uses a 300-second per-test timeout and temporary directories under the certification
+scratch directory. The interpreter matrix above remains the preparation matrix.
+
+Both round 2 findings are fixed. No findings are disputed. Independent re-review
+remains pending; these results do not authorize merge or publication.

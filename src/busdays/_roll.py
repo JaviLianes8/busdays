@@ -46,7 +46,7 @@ class Roll(str, Enum, metaclass=_RollMeta):
     def _missing_(cls, value: object) -> Roll:
         if not isinstance(value, str):
             raise ValueError("unknown roll: expected a convention name")
-        key = "".join(char for char in value.lower() if char not in "_- ")
+        key = "".join(char for char in str.lower(value) if char not in "_- ")
         key = _ALIASES.get(key, key)
         for member in cls:
             if member.value == key:
