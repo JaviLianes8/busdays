@@ -98,3 +98,51 @@ def test_roll_ignores_format_override(name: str, expected: Roll, raises: bool) -
             return "preceding"
 
     assert Roll(Name(name)) is expected
+
+
+@pytest.mark.parametrize(("name", "expected"), _NAMES)
+@pytest.mark.parametrize("raises", [False, True], ids=["misleading", "raising"])
+def test_roll_ignores_casefold_override(name: str, expected: Roll, raises: bool) -> None:
+    class Name(str):
+        def casefold(self) -> str:
+            if raises:
+                raise RuntimeError("string case folding must not run")
+            return "preceding"
+
+    assert Roll(Name(name)) is expected
+
+
+@pytest.mark.parametrize(("name", "expected"), _NAMES)
+@pytest.mark.parametrize("raises", [False, True], ids=["misleading", "raising"])
+def test_roll_ignores_lstrip_override(name: str, expected: Roll, raises: bool) -> None:
+    class Name(str):
+        def lstrip(self, chars: str | None = None, /) -> str:
+            if raises:
+                raise RuntimeError("string left stripping must not run")
+            return "preceding"
+
+    assert Roll(Name(name)) is expected
+
+
+@pytest.mark.parametrize(("name", "expected"), _NAMES)
+@pytest.mark.parametrize("raises", [False, True], ids=["misleading", "raising"])
+def test_roll_ignores_rstrip_override(name: str, expected: Roll, raises: bool) -> None:
+    class Name(str):
+        def rstrip(self, chars: str | None = None, /) -> str:
+            if raises:
+                raise RuntimeError("string right stripping must not run")
+            return "preceding"
+
+    assert Roll(Name(name)) is expected
+
+
+@pytest.mark.parametrize(("name", "expected"), _NAMES)
+@pytest.mark.parametrize("raises", [False, True], ids=["misleading", "raising"])
+def test_roll_ignores_translate_override(name: str, expected: Roll, raises: bool) -> None:
+    class Name(str):
+        def translate(self, table: object, /) -> str:
+            if raises:
+                raise RuntimeError("string translation must not run")
+            return "preceding"
+
+    assert Roll(Name(name)) is expected
